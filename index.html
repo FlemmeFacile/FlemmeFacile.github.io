@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Palabras">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<title>Palabras</title>
+<style>
+:root{--bg:#eef3f2;--fg:#13262b;--mut:#6a7f84;--card:#fff;--line:#d3dedd;--acc:#1f5fbf;--ok:#1f9d6b;--no:#d6453d}
+@media(prefers-color-scheme:dark){:root{--bg:#0d181c;--fg:#e7f0ef;--mut:#8aa0a5;--card:#16272d;--line:#26393f;--acc:#6aa2ff;--ok:#37c48c;--no:#ff6b61}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 -apple-system,system-ui,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);overscroll-behavior:none}
+main{flex:1;overflow:auto;padding:16px;max-width:520px;width:100%;margin:0 auto}
+nav{display:flex;border-top:1px solid var(--line);background:var(--card);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;padding:14px 0;border:0;background:none;color:var(--mut);font:600 15px inherit;font-family:inherit}
+nav button.on{color:var(--acc)}
+section{display:none}section.on{display:block}
+h2{font:700 22px ui-serif,Georgia,serif;margin:4px 0 12px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+input[type=number]{width:64px;padding:8px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);text-align:center}
+select,textarea{width:100%;padding:10px;font:16px inherit;font-family:inherit;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+select{width:auto}
+textarea{height:140px}
+button.b{width:100%;padding:14px;border:0;border-radius:12px;background:var(--acc);color:#fff;font:600 16px inherit;font-family:inherit;margin:4px 0}
+button.b.g{background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+button.b.r{background:var(--no)}
+small,.mut{color:var(--mut);font-size:13px}
+#study{display:none;flex-direction:column;height:100%}
+#study.on{display:flex}
+#top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#top button{background:none;border:0;color:var(--acc);font:600 15px inherit;font-family:inherit}
+#stage{flex:1;position:relative;min-height:280px;perspective:900px;display:flex}
+#card{flex:1;touch-action:none;transition:transform .18s,opacity .18s;position:relative}
+#in{position:absolute;inset:0;transition:transform .35s;transform-style:preserve-3d}
+#in.f{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:2px solid var(--line);border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font:600 34px ui-serif,Georgia,serif;word-break:break-word}
+.face small{font:13px -apple-system,sans-serif;position:absolute;bottom:16px}
+.back{transform:rotateY(180deg)}
+#card[data-d=k] .face{border-color:var(--ok)}
+#card[data-d=u] .face{border-color:var(--no)}
+#acts{display:flex;gap:12px;margin:14px 0 6px}
+#acts button{flex:1;padding:16px;border:0;border-radius:14px;font:700 17px inherit;font-family:inherit;color:#fff}
+.bars{display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:8px}
+.bars div{flex:1;background:var(--acc);border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.bars span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .box{margin:0;text-align:center}
+.grid b{display:block;font:700 28px ui-serif,Georgia,serif}
+</style></head><body>
+<main>
+<section id="home" class="on">
+ <h2>Today</h2>
+ <div class="box">
+  <div class="row"><span>New words</span><input id="sn" type="number" min="0" inputmode="numeric"></div>
+  <div class="row"><span>Words to review</span><input id="sd" type="number" min="0" inputmode="numeric"></div>
+  <div class="row"><span>Hard words</span><input id="sh" type="number" min="0" inputmode="numeric"></div>
+  <div class="row"><span>Show first</span><select id="dir"><option value="es">Spanish</option><option value="en">Translation</option><option value="mix">Random</option></select></div>
+  <small id="avail"></small>
+ </div>
+ <button class="b" data-m="daily">Daily challenge</button>
+ <button class="b g" data-m="new">Only new words</button>
+ <button class="b g" data-m="due">Only review</button>
+ <button class="b g" data-m="hard">Only hard words</button>
+ <p class="mut">Hard = forgotten 2+ times, or still on the first step. A word you know moves to a longer gap (1, 2, 4, 8, 16, 32 days); a word you miss comes back today.</p>
+</section>
+<section id="stats"><h2>Statistics</h2><div id="st"></div></section>
+<section id="words">
+ <h2>Words</h2>
+ <div class="box">
+  <p class="mut" style="margin-top:0">One word per line: Spanish and translation separated by a tab, semicolon, " - " or comma. Duplicates are skipped.</p>
+  <textarea id="paste" placeholder="casa; house&#10;perro; dog"></textarea>
+  <button class="b" id="imp">Add words</button>
+  <input type="file" id="file" accept=".txt,.csv,.tsv" style="margin:6px 0">
+  <small id="msg"></small>
+ </div>
+ <div class="box">
+  <div class="mut">Backup</div>
+  <button class="b g" id="exp">Copy backup to clipboard</button>
+  <button class="b g" id="res">Restore from pasted backup</button>
+  <button class="b r" id="wipe">Delete everything</button>
+  <small>Your data lives on this phone only. Back up now and then.</small>
+ </div>
+</section>
+<div id="study">
+ <div id="top"><button id="quit">Close</button><span class="mut" id="left"></span></div>
+ <div id="stage"><div id="card"><div id="in"><div class="face front"><span id="ft"></span></div><div class="face back"><span id="bt"></span></div></div></div></div>
+ <div id="acts"><button style="background:var(--no)" id="no">Don't know</button><button style="background:var(--ok)" id="yes">Know</button></div>
+ <small style="text-align:center">Tap to flip. Swipe right if you know it, left if not.</small>
+</div>
+</main>
+<nav><button class="on" data-t="home">Study</button><button data-t="stats">Stats</button><button data-t="words">Words</button></nav>
+<script>
+const $=s=>document.querySelector(s),K='palabras_v1',INT=[0,1,2,4,8,16,32,64];
+let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+S=S||{cards:[],set:{n:5,d:10,h:10,dir:'es'},log:{}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const today=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const isNew=c=>!c.seen,isDue=c=>c.seen&&c.due<=today(),isHard=c=>c.seen&&(c.lapses>=2||c.box<=1);
+
+// tabs
+function tab(t){['home','stats','words'].forEach(x=>$('#'+x).classList.toggle('on',x==t));
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));
+ if(t=='stats')renderStats();if(t=='home')renderHome()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{endSession();tab(b.dataset.t)});
+
+// home
+function renderHome(){const C=S.cards;$('#sn').value=S.set.n;$('#sd').value=S.set.d;$('#sh').value=S.set.h;$('#dir').value=S.set.dir;
+ $('#avail').textContent=C.length?`Available now: ${C.filter(isNew).length} new, ${C.filter(isDue).length} due, ${C.filter(isHard).length} hard.`:'No words yet. Add some in the Words tab.'}
+['sn','sd','sh'].forEach(id=>$('#'+id).onchange=e=>{S.set[{sn:'n',sd:'d',sh:'h'}[id]]=Math.max(0,+e.target.value||0);save()});
+$('#dir').onchange=e=>{S.set.dir=e.target.value;save()};
+
+// session
+let Q=[],sess={k:0,u:0},cur=null,flipped=false;
+function build(m){const C=S.cards,used=new Set(),out=[],{n,d,h}=S.set;
+ const take=(arr,k)=>{for(const c of arr){if(k<=0)break;if(!used.has(c.id)){used.add(c.id);out.push(c);k--}}};
+ const due=()=>C.filter(isDue).sort((a,b)=>a.due-b.due),hard=()=>C.filter(isHard).sort((a,b)=>b.lapses-a.lapses||a.box-b.box),nw=()=>C.filter(isNew);
+ if(m=='daily'){take(due(),d);take(hard(),h);take(nw(),n)}
+ else if(m=='new')take(nw(),n);else if(m=='due')take(due(),d);else take(hard(),h);
+ return shuffle(out)}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{
+ const l=build(b.dataset.m);if(!l.length){$('#avail').textContent='Nothing to study in this mode right now.';return}
+ Q=l.map(c=>({c,rev:S.set.dir=='en'||(S.set.dir=='mix'&&Math.random()<.5),retry:false}));sess={k:0,u:0};
+ $('#home').classList.remove('on');document.querySelector('nav').style.display='none';$('#study').classList.add('on');show()});
+function endSession(){Q=[];cur=null;$('#study').classList.remove('on');document.querySelector('nav').style.display='';}
+$('#quit').onclick=()=>{endSession();tab('home')};
+function show(){
+ if(!Q.length){const t=sess.k+sess.u;endSession();tab('home');
+  $('#avail').textContent=`Done: ${sess.k} known, ${sess.u} missed${t?` (${Math.round(100*sess.k/t)}%)`:''}.`;return}
+ cur=Q[0];const card=$('#card'),inn=$('#in');
+ card.style.transition=inn.style.transition='none';card.style.transform='';card.style.opacity=1;card.dataset.d='';inn.classList.remove('f');flipped=false;
+ $('#ft').textContent=cur.rev?cur.c.en:cur.c.es;$('#bt').textContent=cur.rev?cur.c.es:cur.c.en;
+ void card.offsetWidth;card.style.transition=inn.style.transition='';
+ $('#left').textContent=Q.length+' left'}
+function flip(){flipped=!flipped;$('#in').classList.toggle('f',flipped)}
+function answer(k){const it=Q.shift(),c=it.c,t=today(),L=S.log[t]=S.log[t]||{k:0,u:0,n:0};
+ if(!c.seen)L.n++;
+ if(!it.retry){k?(L.k++,sess.k++):(L.u++,sess.u++)}
+ if(k){c.box=c.seen?Math.min(7,c.box+1):2;c.due=t+INT[c.box]}
+ else{c.lapses++;c.box=0;c.due=t;if(!it.retry)Q.push({c,rev:it.rev,retry:true})}
+ c.seen=1;c.reps++;save();show()}
+function fly(k){const card=$('#card');card.style.transform=`translateX(${k?600:-600}px) rotate(${k?25:-25}deg)`;card.style.opacity=0;setTimeout(()=>answer(k),180)}
+$('#yes').onclick=()=>cur&&fly(true);$('#no').onclick=()=>cur&&fly(false);
+let sx=0,dx=0,drag=false;const card=$('#card');
+card.onpointerdown=e=>{drag=true;sx=e.clientX;dx=0;card.setPointerCapture(e.pointerId);card.style.transition='none'};
+card.onpointermove=e=>{if(!drag)return;dx=e.clientX-sx;card.style.transform=`translateX(${dx}px) rotate(${dx/20}deg)`;card.dataset.d=dx>40?'k':dx<-40?'u':''};
+card.onpointerup=card.onpointercancel=e=>{if(!drag)return;drag=false;card.style.transition='';
+ if(Math.abs(dx)>100)fly(dx>0);else{card.style.transform='';card.dataset.d='';if(Math.abs(dx)<8)flip()}};
+
+// stats
+function renderStats(){const C=S.cards,t=today(),L=S.log;let k=0,u=0;for(const d in L){k+=L[d].k;u+=L[d].u}
+ const td=L[t]||{k:0,u:0,n:0};let streak=0,d=(L[t]&&L[t].k+L[t].u)?t:t-1;while(L[d]&&L[d].k+L[d].u>0){streak++;d--}
+ const learning=C.filter(c=>c.seen&&c.box<4).length,master=C.filter(c=>c.seen&&c.box>=4).length;
+ const days=[...Array(7)].map((_,i)=>t-6+i),mx=Math.max(1,...days.map(x=>L[x]?L[x].k+L[x].u:0));
+ const wd=x=>new Date(x*864e5).toLocaleDateString('en',{weekday:'short',timeZone:'UTC'});
+ const tile=(v,l)=>`<div class="box"><b>${v}</b><small>${l}</small></div>`;
+ $('#st').innerHTML=`<div class="grid">${tile(C.length,'words')}${tile(C.filter(isNew).length,'not started')}${tile(learning,'learning')}${tile(master,'well known')}${tile(C.filter(isDue).length,'due today')}${tile(C.filter(isHard).length,'hard')}${tile(td.k+td.u,'cards today')}${tile(streak,'day streak')}${tile(k+u?Math.round(100*k/(k+u))+'%':'-','overall accuracy')}${tile(td.n,'new words today')}</div>
+ <div class="box" style="margin-top:12px;padding-bottom:30px"><small>Cards per day, last 7 days</small><div class="bars">${days.map(x=>`<div style="height:${100*(L[x]?L[x].k+L[x].u:0)/mx}%"><span>${wd(x)}</span></div>`).join('')}</div></div>`}
+
+// words
+function parse(txt){const out=[];for(let l of txt.split(/\r?\n/)){l=l.trim();if(!l)continue;
+ let p=l.includes('\t')?l.split('\t'):l.includes(';')?l.split(';'):l.includes(' - ')?l.split(' - '):l.split(',');
+ const es=(p.shift()||'').trim().replace(/^"|"$/g,''),en=p.join(', ').trim().replace(/^"|"$/g,'');if(es&&en)out.push([es,en])}return out}
+function add(txt){const have=new Set(S.cards.map(c=>c.es.toLowerCase()));let a=0,s=0;
+ for(const[es,en]of parse(txt)){if(have.has(es.toLowerCase())){s++;continue}have.add(es.toLowerCase());
+  S.cards.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),es,en,box:0,due:0,lapses:0,seen:0,reps:0});a++}
+ save();$('#msg').textContent=`Added ${a} words${s?`, skipped ${s} duplicates`:''}. Total: ${S.cards.length}.`}
+$('#imp').onclick=()=>{add($('#paste').value);$('#paste').value=''};
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(add)};
+$('#exp').onclick=async()=>{const j=JSON.stringify(S);try{await navigator.clipboard.writeText(j);$('#msg').textContent='Backup copied. Paste it into Notes.'}catch(e){$('#paste').value=j;$('#msg').textContent='Copy the text from the box above and save it in Notes.'}};
+$('#res').onclick=()=>{try{const o=JSON.parse($('#paste').value);if(!o.cards)throw 0;S=o;save();$('#paste').value='';$('#msg').textContent='Restored '+S.cards.length+' words.'}catch(e){$('#msg').textContent='Paste a backup into the box above first.'}};
+$('#wipe').onclick=()=>{if(confirm('Delete all words and statistics?')){S={cards:[],set:S.set,log:{}};save();$('#msg').textContent='Deleted.'}};
+
+// icon + offline
+(()=>{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');x.fillStyle='#1f5fbf';x.fillRect(0,0,180,180);
+ x.fillStyle='#fff';x.font='bold 110px Georgia,serif';x.textAlign='center';x.fillText('Ñ',90,128);
+ const l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL();document.head.appendChild(l)})();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+renderHome();
+</script></body></html>

@@ -1,0 +1,4 @@
+casa; house
+perro; dog
+gracias; thank you
+tal vez; maybe
